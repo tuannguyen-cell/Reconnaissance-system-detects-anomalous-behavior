@@ -1,4 +1,4 @@
-# Phat hien hanh vi bat thuong tu tu the nguoi
+# Phat hien hanh vi bat thuong
 
 Du an su dung YOLOv8-Pose de trich xuat 17 diem khop nguoi, sau do dung mo hinh LSTM de phan loai chuoi 30 frame thanh `normal` hoac `abnormal`.
 
