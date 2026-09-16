@@ -1,284 +1,133 @@
-# Tóm Tắt Kế Hoạch Dự Án: Hệ Thống Phát Hiện Hành Vi Bất Thường
+# Tóm Tắt Tiến Độ Dự Án: Hệ Thống Phát Hiện Hành Vi Bất Thường
 
-## 📊 Tiến Độ Hiện Tại: **Core AI Pipeline 100% Complete**
+**Cập nhật lần cuối:** 16/09/2026
 
-### ✅ Đã Hoàn Thành Cả 5 Phase:
-1. **PHASE 1**: Setup môi trường Python 3.11 + PyTorch CUDA 12.1 + YOLOv8 + GPU RTX 2050
-2. **PHASE 2**: YOLOv8-Pose + Camera (`scripts/camera_pose.py`)
-3. **PHASE 3**: Tự động tạo dataset keypoints (`scripts/extract_keypoints.py`) - 330 normal + 107 abnormal (437 files .npy)
-4. **PHASE 4**: Huấn luyện Custom LSTM (`scripts/train_lstm.py`) - **Best Val Acc: 86.93%** (đạt mục tiêu >85%), đã lưu `models/lstm_best.pt`
-5. **PHASE 5**: YOLO + LSTM chạy Realtime (`scripts/realtime.py`) - hỗ trợ cả Webcam và file video test, hiển thị HUD cảnh báo trực quan
+## Trạng thái hiện tại
 
-### 🚀 Bước Tiếp Theo (Nếu mở rộng):
-- Backend API (Flask / FastAPI) & Mobile App / Dashboard nếu cần.
+### Hoàn thành: Core AI pipeline
 
----
+- Môi trường Python và dependencies đã được khai báo trong `requirements.txt`.
+- YOLOv8-Pose đã được tích hợp để trích xuất 17 keypoint người trong `scripts/camera_pose.py` và `scripts/extract_keypoints.py`.
+- Dataset đã được chuẩn bị: `330` file keypoint normal, `107` file keypoint abnormal, cùng `437` video đầu vào tương ứng.
+- LSTM đã được huấn luyện bằng `scripts/train_lstm.py` với chuỗi 30 frame, 51 đặc trưng/frame, hidden size 128 và 2 layer.
+- Kết quả tốt nhất đã lưu tại `models/lstm_best.pt`: validation accuracy **86.93%**. Checkpoint cuối nằm tại `models/lstm_last.pt`.
+- Nhận diện realtime đã có trong `scripts/realtime.py`, hỗ trợ webcam, video file, threshold, loop, pause, snapshot và lưu video.
+- `README.md` đã có hướng dẫn cài đặt, chuẩn bị dataset, train và chạy demo.
 
-## 📅 Timeline 5 Tuần
+### Chưa thực hiện
 
-### 🗓️ Week 1: Model Training & Optimization
-**Mục tiêu:** Accuracy > 85%
+- Chưa có backend Flask/FastAPI, REST API, database hoặc WebSocket.
+- Chưa có React Native/mobile app hoặc dashboard web.
+- Chưa có chuyển đổi TensorFlow Lite/on-device inference.
+- Chưa có báo cáo precision, recall, F1 theo từng class hoặc benchmark latency chính thức.
+- Chưa có bộ test tự động và chưa xác nhận demo video/presentation chính thức.
 
-- **Day 1-2**: Train LSTM model (50 epochs, batch 64)
-- **Day 3-4**: Hyperparameter tuning (hidden size, learning rate, sequence length)
-- **Day 5**: Model selection, webcam test, record demo video
+**Đánh giá tổng thể:** Core AI pipeline đã hoàn thành; sản phẩm tích hợp backend/mobile và các deliverable trình bày vẫn chưa bắt đầu.
 
-**Lệnh:**
-```bash
-cd "D:\word_D\Hệ thống thông minh"
-python scripts/train_lstm.py
-```
+## Kế hoạch tiếp theo
 
----
+### Phase 1: Hoàn tất và kiểm thử model - Đã hoàn thành
 
-### 🗓️ Week 2: Backend Development
-**Tech Stack:** Flask + PyTorch + SQLite + WebSocket
+- Dataset keypoint đã được tạo từ video.
+- LSTM đã train 50 epoch; accuracy validation tốt nhất đạt 86.93%.
+- Pipeline YOLO + LSTM đã chạy được với webcam và video file.
 
-- **Day 6-7**: Flask backend setup, API endpoints
-- **Day 8-9**: WebSocket for real-time communication
-- **Day 10**: Backend testing
+### Phase 2: Backend API - Chưa bắt đầu
 
-**API Endpoints:**
-- `POST /api/detect/image` - Detect từ single image
-- `POST /api/detect/sequence` - Detect từ sequence frames
-- `GET /api/status` - Server status
-- `GET /api/history` - Lịch sử detections
-- `POST /api/feedback` - User feedback
-- `GET /api/stats` - Statistics
+**Mục tiêu:** Tách inference thành service có API để client khác sử dụng.
 
-**Project Structure:**
-```
-backend/
-├── app.py                    # Flask app chính
-├── models/lstm_best.pt       # Trained model
-├── utils.py                  # Helper functions
-├── model_loader.py          # Model loading
-├── database.py              # SQLite operations
-└── requirements.txt
-```
+- [ ] Tạo backend Flask hoặc FastAPI và nạp `models/lstm_best.pt`.
+- [ ] Thêm endpoint phát hiện từ sequence và endpoint health/status.
+- [ ] Thêm lưu lịch sử và thống kê nếu cần.
+- [ ] Bổ sung WebSocket chỉ khi yêu cầu realtime từ client.
 
----
+**API dự kiến:**
 
-### 🗓️ Week 3: React Native Mobile App
-**Tech Stack:** React Native + Camera + WebSocket + Axios
+- `POST /api/detect/sequence` - Phân loại chuỗi keypoint.
+- `GET /api/status` - Kiểm tra server và model.
+- `GET /api/history` - Lịch sử detections nếu dùng database.
+- `GET /api/stats` - Thống kê nếu cần.
 
-- **Day 11-12**: Project setup, camera integration
-- **Day 13-14**: Detection UI & results screens
-- **Day 15**: Settings & configuration
+### Phase 3: Client mobile/dashboard - Chưa bắt đầu
 
-**Screens:**
-1. **CameraScreen** - Camera + capture/stream
-2. **ResultScreen** - Display results (Normal/Abnormal + confidence)
-3. **HistoryScreen** - Detection history
-4. **StatsScreen** - Statistics dashboard
-5. **SettingsScreen** - Configuration
+- [ ] Chọn React Native mobile hoặc dashboard web sau khi backend ổn định.
+- [ ] Tích hợp camera và hiển thị kết quả normal/abnormal cùng confidence.
+- [ ] Thêm lịch sử, thống kê và cấu hình threshold.
 
-**Lệnh:**
-```bash
-npx react-native init ClassroomMonitor
-cd ClassroomMonitor
-npm install react-native-camera react-native-websocket axios
-```
+### Phase 4: Tối ưu và tính năng nâng cao - Chưa bắt đầu
 
----
+- [ ] Đo latency và độ ổn định trên webcam/video dài.
+- [ ] Tính precision, recall, F1 và confusion matrix trên tập đánh giá cố định.
+- [ ] Cân nhắc TFLite/on-device inference nếu có yêu cầu triển khai mobile.
+- [ ] Bổ sung cảnh báo âm thanh/hình ảnh sau khi client đã có.
 
-### 🗓️ Week 4: Advanced Features & Polish
-- **Day 16-17**: On-device TFLite model (optional)
-- **Day 18-19**: UI/UX improvements, animations
-- **Day 20**: Notification system (visual, audio, vibration)
+### Phase 5: Kiểm thử và bàn giao - Chưa bắt đầu
 
----
+- [ ] Viết smoke test cho việc load model, đọc dataset và inference.
+- [ ] Kiểm thử end-to-end sau khi backend/client hoàn thành.
+- [ ] Quay demo, chụp màn hình và hoàn thiện slide.
 
-### 🗓️ Week 5: Testing, Demo & Presentation
-- **Day 21-22**: Integration testing, bug fixes
-- **Day 23-24**: Demo preparation, record videos
-- **Day 25**: Documentation, presentation slides
+## Các mốc đã đạt và còn lại
 
----
+### Đã đạt
 
-## 🎯 Weekly Milestones
+- [x] Model validation accuracy vượt mục tiêu 85%.
+- [x] Realtime inference hoạt động với webcam và video file.
+- [x] Có model checkpoint và README hướng dẫn chạy pipeline.
 
-### ✅ Week 1: Model Complete
-- LSTM model trained (accuracy > 85%)
-- Real-time detection with webcam
-- Demo video recorded
+### Còn lại
 
-### ✅ Week 2: Backend Complete
-- Flask server running locally
-- All API endpoints working
-- WebSocket real-time communication
+- [ ] Backend API, client mobile/dashboard và WebSocket.
+- [ ] On-device model, notification và UI nâng cao.
+- [ ] Demo video, test tự động, báo cáo metric đầy đủ và presentation.
 
-### ✅ Week 3: Mobile App MVP
-- React Native app captures frames
-- App sends frames to server
-- App displays detection results
+## Công nghệ đang sử dụng
 
-### ✅ Week 4: App Polished
-- On-device model integration (optional)
-- Nice UI/UX with animations
-- Notification system working
+- Python, PyTorch, OpenCV và Ultralytics YOLOv8-Pose.
+- NumPy, tqdm và các package trong `requirements.txt`.
+- Backend/mobile/TFLite chỉ là công nghệ dự kiến, chưa có trong repository.
 
-### ✅ Week 5: Demo Ready
-- End-to-end system working
-- Demo videos recorded
-- Documentation complete
-- Presentation slides ready
+## Chỉ số hiện có và cần bổ sung
 
----
+- **Validation accuracy:** 86.93%.
+- **Precision/Recall/F1:** chưa được tính trong pipeline hiện tại.
+- **Latency/WebSocket/Battery:** chưa benchmark.
 
-## 🔧 Tech Stack
+## Deliverables
 
-### Backend
-- Flask (Python web framework)
-- PyTorch (Model inference)
-- OpenCV (Image processing)
-- Flask-SocketIO (WebSocket)
-- SQLite (Database)
+- **Đã có:** source code xử lý dataset, trích xuất keypoint, train LSTM, realtime inference, README, `models/lstm_best.pt` và `models/lstm_last.pt`.
+- **Cần bổ sung:** backend API, mobile/dashboard, file `.tflite` nếu cần, evaluation report, demo video, screenshots, architecture diagram và presentation.
 
-### Mobile App
-- React Native (Cross-platform)
-- React Native Camera
-- React Native WebSocket
-- Axios (HTTP requests)
-- React Navigation
-- React Native Reanimated
+## Tiêu chí hoàn thành tiếp theo
 
-### Optional On-device
-- TensorFlow Lite
-- react-native-fast-tflite
+- [x] Model validation accuracy > 85%.
+- [x] Realtime inference từ webcam/video file.
+- [x] README và script chạy được.
+- [ ] Backend API và kiểm thử API.
+- [ ] Client hiển thị kết quả.
+- [ ] Báo cáo metric đầy đủ và demo end-to-end.
 
----
+## Rủi ro hiện tại
 
-## 📊 Expected Metrics
+| Rủi ro | Hướng xử lý |
+|---|---|
+| Validation accuracy chưa phản ánh tốt từng class | Tính thêm precision, recall, F1 và confusion matrix |
+| Chưa có API/client | Làm backend tối thiểu trước, sau đó mới tích hợp UI |
+| Inference realtime phụ thuộc thiết bị | Benchmark CPU/GPU và đặt threshold phù hợp |
+| Dataset mất cân bằng | Giữ class weights và theo dõi metric abnormal riêng |
 
-### Model Performance
-- **Accuracy**: > 85%
-- **Precision**: > 80% (abnormal class)
-- **Recall**: > 80% (abnormal class)
-- **F1-Score**: > 80%
+## Việc cần làm tiếp theo
 
-### System Performance
-- **Detection Latency**: < 2s (cloud), < 500ms (on-device)
-- **WebSocket Latency**: < 100ms
-- **App Startup Time**: < 3s
-- **Battery Impact**: < 10%/hour
+### 1. Kiểm tra pipeline hiện tại
 
----
-
-## 📦 Deliverables
-
-1. **Source Code**
-   - Training scripts
-   - Backend Flask app
-   - React Native mobile app
-   - Documentation
-
-2. **Trained Model**
-   - `lstm_best.pt` (PyTorch)
-   - `lstm_best.tflite` (optional)
-   - Evaluation report
-
-3. **Demo**
-   - Live demo (if possible)
-   - Demo video (5-10 phút)
-   - Screenshots
-
-4. **Documentation**
-   - README with setup instructions
-   - API documentation
-   - Architecture diagram
-   - User guide
-
-5. **Presentation**
-   - 15-20 slides
-   - Live demo or video demo
-   - Q&A preparation
-
----
-
-## 🎯 Success Criteria
-
-### Minimum (Grade: B)
-- ✅ Model accuracy > 75%
-- ✅ Backend API working
-- ✅ Mobile app detects & displays results
-- ✅ Demo video recorded
-- ✅ Basic documentation
-
-### Good (Grade: A-)
-- ✅ Model accuracy > 85%
-- ✅ Real-time WebSocket working
-- ✅ Nice UI/UX
-- ✅ Multiple screens complete
-- ✅ Good documentation
-- ✅ Live demo working
-
-### Excellent (Grade: A)
-- ✅ Model accuracy > 90%
-- ✅ On-device model integration
-- ✅ Notification system
-- ✅ Statistics dashboard
-- ✅ Excellent documentation
-- ✅ Impressive live demo
-- ✅ Additional features
-
----
-
-## 💡 Tips for Success
-
-1. **Start with model training immediately** - Foundation
-2. **Test mobile deployment early** - Don't wait until Week 5
-3. **Keep backend simple** - Flask > complex frameworks
-4. **Focus on demo quality** - Impressive demo = good grade
-5. **Document as you go** - Don't leave for last
-6. **Have backup plans** - Video demo if live demo fails
-7. **Test on real devices** - Emulator ≠ real phone
-8. **Prepare for questions** - Know your system inside out
-
----
-
-## ⚠️ Key Risks
-
-| Risk | Mitigation |
-|------|------------|
-| Model accuracy < 80% | Collect more data, transfer learning |
-| Mobile deployment issues | Use Expo, test early on devices |
-| WebSocket unstable | Reconnection logic, HTTP fallback |
-| On-device model slow | Quantization, cloud fallback |
-| Time overrun | Focus on MVP first, cut non-essential features |
-
----
-
-## 🚀 Next Immediate Actions
-
-### 1. Train Model (Week 1, Day 1-2)
-```bash
-cd "D:\word_D\Hệ thống thông minh"
-python scripts/train_lstm.py
-```
-
-### 2. Test with Webcam
-```bash
+```powershell
 python scripts/realtime.py
 ```
 
-### 3. Setup Backend (Week 2, Day 6-7)
-```bash
-mkdir backend
-cd backend
-# Copy models/lstm_best.pt vào backend/
-pip install flask torch opencv-python numpy flask-socketio
-```
+### 2. Đo metric và tạo báo cáo đánh giá
 
-### 4. Initialize React Native (Week 3, Day 11-12)
-```bash
-npx react-native init ClassroomMonitor
-cd ClassroomMonitor
-npm install react-native-camera react-native-websocket axios
-```
+Bổ sung precision, recall, F1 và confusion matrix trên tập validation/test cố định.
 
----
+### 3. Tạo backend tối thiểu
 
-**Total Timeline: 5 Weeks (25 Days)**
-**Current Status: 50% Complete (Data ready, need to train model)**
-**Critical Path: Model Training → Backend → Mobile App → Demo**
+Tạo service inference, nạp `models/lstm_best.pt`, sau đó kiểm thử endpoint sequence trước khi xây dựng client.
