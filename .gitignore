@@ -31,6 +31,7 @@ htmlcov/
 venv/
 env/
 .env
+*.db
 
 # Bỏ file zip lớn
 OneDrive_2_9-8-2026.zip

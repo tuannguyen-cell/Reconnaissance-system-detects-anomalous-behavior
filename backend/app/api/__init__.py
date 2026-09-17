@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api import detection, statistics, health
+from app.api import detection, statistics, health, websocket
 
 api_router = APIRouter()
 
@@ -20,4 +20,10 @@ api_router.include_router(
     statistics.router,
     prefix="/statistics",
     tags=["statistics"]
+)
+
+api_router.include_router(
+    websocket.router,
+    prefix="/ws",
+    tags=["websocket"]
 )
