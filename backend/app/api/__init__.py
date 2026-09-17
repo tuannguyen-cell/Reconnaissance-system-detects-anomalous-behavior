@@ -1,7 +1,13 @@
 from fastapi import APIRouter
-from app.api import detection, statistics, health, websocket
+from app.api import auth, detection, statistics, health, websocket
 
 api_router = APIRouter()
+
+api_router.include_router(
+    auth.router,
+    prefix="/auth",
+    tags=["auth"]
+)
 
 # Include sub-routers
 api_router.include_router(

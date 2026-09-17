@@ -107,6 +107,8 @@ class InferenceService:
             image_data = base64.b64decode(base64_string)
             nparr = np.frombuffer(image_data, np.uint8)
             image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            if image is None:
+                raise ValueError("Invalid image data")
             return image
         except Exception as e:
             logger.error(f"Error decoding base64 image: {e}")
@@ -197,15 +199,7 @@ class InferenceService:
             
         except Exception as e:
             logger.error(f"Error in anomaly detection: {e}")
-            return {
-                "label": "normal",
-                "confidence": 0.0,
-                "n_persons": 0,
-                "buffer_size": len(self.sequence_buffer),
-                "processing_time": time.time() - start_time,
-                "model_used": "error",
-                "error": str(e)
-            }
+            raise
 
     def get_status(self) -> Dict:
         """Get service status"""

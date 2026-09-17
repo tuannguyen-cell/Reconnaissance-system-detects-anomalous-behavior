@@ -4,13 +4,48 @@ if hasattr(sys.stdout, 'reconfigure'):
 if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8')
 
+import os
 import requests
 import base64
-import json
-from pathlib import Path
+import uuid
 
 # API base URL
-BASE_URL = "http://localhost:8000/api/v1"
+BASE_URL = os.getenv("BASE_URL", "http://localhost:8000/api/v1")
+AUTH_HEADERS = {}
+
+
+def test_authentication():
+    """Register a temporary user and obtain a JWT for protected endpoints."""
+    print("Testing authentication...")
+    username = f"smoke_{uuid.uuid4().hex[:8]}"
+    user = {
+        "username": username,
+        "email": f"{username}@example.com",
+        "password": "StrongPass123",
+    }
+    try:
+        register = requests.post(f"{BASE_URL}/auth/register", json=user, timeout=30)
+        print(f"Register status: {register.status_code}")
+        if register.status_code != 201:
+            return False
+
+        login = requests.post(
+            f"{BASE_URL}/auth/login",
+            json={"username": username, "password": user["password"]},
+            timeout=30,
+        )
+        print(f"Login status: {login.status_code}")
+        if login.status_code != 200:
+            return False
+
+        token = login.json().get("access_token")
+        if not token:
+            return False
+        AUTH_HEADERS.update({"Authorization": f"Bearer {token}"})
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
 
 def test_health_check():
     """Test health check endpoint"""
@@ -59,7 +94,8 @@ def test_detection_with_mock_image():
         response = requests.post(
             f"{BASE_URL}/detection/detect",
             json=payload,
-            headers={"Content-Type": "application/json"}
+            headers={**AUTH_HEADERS, "Content-Type": "application/json"},
+            timeout=60,
         )
         
         print(f"Status Code: {response.status_code}")
@@ -73,7 +109,11 @@ def test_get_detections():
     """Test getting detections history"""
     print("\nTesting get detections...")
     try:
-        response = requests.get(f"{BASE_URL}/detection/detections")
+        response = requests.get(
+            f"{BASE_URL}/detection/detections",
+            headers=AUTH_HEADERS,
+            timeout=30,
+        )
         print(f"Status Code: {response.status_code}")
         print(f"Response: {response.json()}")
         return response.status_code == 200
@@ -85,7 +125,11 @@ def test_statistics():
     """Test statistics endpoint"""
     print("\nTesting statistics...")
     try:
-        response = requests.get(f"{BASE_URL}/statistics/statistics")
+        response = requests.get(
+            f"{BASE_URL}/statistics/statistics",
+            headers=AUTH_HEADERS,
+            timeout=30,
+        )
         print(f"Status Code: {response.status_code}")
         print(f"Response: {response.json()}")
         return response.status_code == 200
@@ -99,6 +143,7 @@ def main():
     print("=" * 50)
     
     tests = [
+        ("Authentication", test_authentication),
         ("Health Check", test_health_check),
         ("Server Status", test_server_status),
         ("Detection", test_detection_with_mock_image),
