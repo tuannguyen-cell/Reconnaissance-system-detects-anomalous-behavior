@@ -8,8 +8,9 @@ import {
   ActivityIndicator,
   Vibration,
 } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { theme } from '../theme';
-import { mockApi } from '../services/mockApi';
+import { api } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 import { Detection, DetectionResult } from '../types';
 
@@ -22,8 +23,12 @@ const MonitorScreen: React.FC = () => {
   const [lastDetectionTime, setLastDetectionTime] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [serverConnected, setServerConnected] = useState(true);
+  const [permission, requestPermission] = useCameraPermissions();
   
   const detectionInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cameraRef = useRef<CameraView>(null);
+  const monitoringRef = useRef(false);
+  const pausedRef = useRef(false);
   const lastAlertTime = useRef<number>(0);
 
   useEffect(() => {
@@ -35,6 +40,14 @@ const MonitorScreen: React.FC = () => {
   }, []);
 
   const startMonitoring = async () => {
+    if (!permission?.granted) {
+      const result = await requestPermission();
+      if (!result.granted) {
+        Alert.alert('Cần quyền camera', 'Hãy cấp quyền camera để bắt đầu giám sát.');
+        return;
+      }
+    }
+
     setIsConnecting(true);
     
     // Simulate camera permission check
@@ -42,6 +55,8 @@ const MonitorScreen: React.FC = () => {
       setIsConnecting(false);
       setIsMonitoring(true);
       setIsPaused(false);
+      monitoringRef.current = true;
+      pausedRef.current = false;
       startDetectionLoop();
     }, 1500);
   };
@@ -49,6 +64,8 @@ const MonitorScreen: React.FC = () => {
   const stopMonitoring = () => {
     setIsMonitoring(false);
     setIsPaused(false);
+    monitoringRef.current = false;
+    pausedRef.current = false;
     setCurrentResult(null);
     setCurrentConfidence(null);
     
@@ -60,6 +77,7 @@ const MonitorScreen: React.FC = () => {
 
   const pauseMonitoring = () => {
     setIsPaused(!isPaused);
+    pausedRef.current = !isPaused;
     if (!isPaused && detectionInterval.current) {
       clearInterval(detectionInterval.current);
       detectionInterval.current = null;
@@ -74,10 +92,17 @@ const MonitorScreen: React.FC = () => {
     }
 
     detectionInterval.current = setInterval(async () => {
-      if (!isMonitoring || isPaused) return;
+      if (!monitoringRef.current || pausedRef.current || !cameraRef.current) return;
 
       try {
-        const detection = await mockApi.detectFromFrame({}, 0.5);
+        const photo = await cameraRef.current.takePictureAsync({
+          base64: true,
+          quality: 0.5,
+          skipProcessing: true,
+          shutterSound: false,
+        });
+        if (!photo.base64) return;
+        const detection = await api.detectFromFrame(photo.base64, 0.5);
         
         setCurrentResult(detection.label);
         setCurrentConfidence(detection.confidence);
@@ -158,8 +183,13 @@ const MonitorScreen: React.FC = () => {
           </View>
         ) : isMonitoring ? (
           <View style={styles.cameraActive}>
+            <CameraView
+              ref={cameraRef}
+              style={styles.cameraPreview}
+              facing="back"
+            />
             <View style={styles.cameraFrame}>
-              <Text style={styles.cameraText}>📹 CAMERA FEED</Text>
+              <Text style={styles.cameraText}>CAMERA FEED</Text>
               <Text style={styles.cameraSubtext}>
                 {isPaused ? 'Đã tạm dừng' : 'Đang giám sát'}
               </Text>
@@ -305,6 +335,9 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  cameraPreview: {
+    ...StyleSheet.absoluteFill,
   },
   cameraFrame: {
     borderWidth: 2,

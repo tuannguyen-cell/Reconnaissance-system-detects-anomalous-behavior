@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { theme } from '../theme';
-import { mockApi } from '../services/mockApi';
+import { api } from '../services/api';
 
 interface StatisticsData {
   total: number;
@@ -27,7 +27,7 @@ const StatisticsScreen: React.FC = () => {
 
   const loadStatistics = async () => {
     try {
-      const data = await mockApi.getStatistics();
+      const data = await api.getStatistics();
       setStatistics(data);
     } catch (error) {
       console.error('Error loading statistics:', error);

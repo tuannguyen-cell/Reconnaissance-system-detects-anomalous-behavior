@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { theme } from '../theme';
-import { mockApi } from '../services/mockApi';
+import { api } from '../services/api';
 import { AppSettings } from '../types';
 import { useNavigation } from '@react-navigation/native';
 
@@ -32,7 +32,7 @@ const SettingsScreen: React.FC = () => {
   const handleSaveSettings = async () => {
     setIsLoading(true);
     try {
-      await mockApi.saveSettings(settings);
+      await api.saveSettings(settings);
       Alert.alert('Thành công', 'Cài đặt đã được lưu');
     } catch (error) {
       Alert.alert('Lỗi', 'Không thể lưu cài đặt');
@@ -44,7 +44,7 @@ const SettingsScreen: React.FC = () => {
   const handleTestConnection = async () => {
     setServerStatus('connecting');
     try {
-      await mockApi.connectToServer(settings.serverUrl);
+      await api.connectToServer(settings.serverUrl);
       setServerStatus('ok');
       Alert.alert('Thành công', 'Đã kết nối đến server');
     } catch (error) {
@@ -62,10 +62,13 @@ const SettingsScreen: React.FC = () => {
         { 
           text: 'Đăng xuất', 
           style: 'destructive',
-          onPress: () => navigation.reset({
-            index: 0,
-            routes: [{ name: 'Connect' as never }],
-          })
+          onPress: async () => {
+            await api.logout();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Connect' as never }],
+            });
+          }
         },
       ]
     );

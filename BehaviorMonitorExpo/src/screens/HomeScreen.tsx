@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { theme } from '../theme';
-import { mockApi } from '../services/mockApi';
+import { api } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 import { ServerStatus } from '../types';
 
@@ -25,8 +25,8 @@ const HomeScreen: React.FC = () => {
   const loadData = async () => {
     try {
       const [status, detections] = await Promise.all([
-        mockApi.getServerStatus(),
-        mockApi.getDetections({ label: 'abnormal' }),
+        api.getServerStatus(),
+        api.getDetections({ label: 'abnormal' }),
       ]);
       
       setServerStatus(status);

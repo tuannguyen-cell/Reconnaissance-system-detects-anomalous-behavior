@@ -12,12 +12,14 @@ import {
   ScrollView,
 } from 'react-native';
 import { theme } from '../theme';
-import { mockApi } from '../services/mockApi';
+import { api, DEFAULT_SERVER_URL } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 
 const ConnectScreen: React.FC = () => {
   const navigation = useNavigation();
-  const [serverUrl, setServerUrl] = useState(Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000');
+  const [serverUrl, setServerUrl] = useState(Platform.OS === 'android' ? 'http://10.0.2.2:8000' : DEFAULT_SERVER_URL);
+  const [username, setUsername] = useState('demo');
+  const [password, setPassword] = useState('demo12345');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +33,15 @@ const ConnectScreen: React.FC = () => {
     setError(null);
 
     try {
-      const status = await mockApi.connectToServer(serverUrl);
+      if (!username.trim() || password.length < 8) {
+        setError('Tên đăng nhập không được để trống và mật khẩu phải có ít nhất 8 ký tự');
+        return;
+      }
+
+      const status = await api.connectToServer(serverUrl, {
+        username: username.trim(),
+        password,
+      });
       
       if (status.status === 'ok') {
         // Navigate to Home screen
@@ -73,6 +83,26 @@ const ConnectScreen: React.FC = () => {
               editable={!isLoading}
             />
 
+            <Text style={styles.label}>Tên đăng nhập</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="demo"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+              editable={!isLoading}
+            />
+
+            <Text style={styles.label}>Mật khẩu</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Tối thiểu 8 ký tự"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              editable={!isLoading}
+            />
+
             {error && (
               <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>{error}</Text>
@@ -93,7 +123,7 @@ const ConnectScreen: React.FC = () => {
 
             <View style={styles.infoContainer}>
               <Text style={styles.infoText}>
-                💡 Đây là phiên bản demo với dữ liệu giả lập
+                💡 Tài khoản mới sẽ được đăng ký tự động nếu chưa tồn tại
               </Text>
               <Text style={styles.infoText}>
                 📱 Hỗ trợ cả Android và iOS

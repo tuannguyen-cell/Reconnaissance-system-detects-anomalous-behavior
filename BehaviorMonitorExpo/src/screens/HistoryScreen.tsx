@@ -9,7 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { theme } from '../theme';
-import { mockApi } from '../services/mockApi';
+import { api } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 import { Detection, DetectionResult } from '../types';
 
@@ -31,7 +31,7 @@ const HistoryScreen: React.FC = () => {
 
   const loadDetections = async () => {
     try {
-      const data = await mockApi.getDetections();
+      const data = await api.getDetections();
       setDetections(data);
     } catch (error) {
       console.error('Error loading detections:', error);
