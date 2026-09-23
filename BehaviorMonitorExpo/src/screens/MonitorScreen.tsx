@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Vibration,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { theme } from '../theme';
@@ -29,7 +28,6 @@ const MonitorScreen: React.FC = () => {
   const cameraRef = useRef<CameraView>(null);
   const monitoringRef = useRef(false);
   const pausedRef = useRef(false);
-  const lastAlertTime = useRef<number>(0);
 
   useEffect(() => {
     return () => {
@@ -108,38 +106,11 @@ const MonitorScreen: React.FC = () => {
         setCurrentConfidence(detection.confidence);
         setLastDetectionTime(detection.timestamp);
 
-        // Trigger alert for abnormal behavior
-        if (detection.label === 'abnormal') {
-          const now = Date.now();
-          // Prevent alert spamming (cooldown: 5 seconds)
-          if (now - lastAlertTime.current > 5000) {
-            lastAlertTime.current = now;
-            triggerAlert(detection.confidence);
-          }
-        }
       } catch (error) {
         console.error('Detection error:', error);
         setServerConnected(false);
       }
     }, 2000); // Detect every 2 seconds
-  };
-
-  const triggerAlert = (confidence: number) => {
-    // Vibrate
-    Vibration.vibrate(500);
-    
-    // Show alert
-    Alert.alert(
-      '⚠️ Cảnh báo hành vi bất thường',
-      `Confidence: ${(confidence * 100).toFixed(1)}%`,
-      [
-        { text: 'OK', style: 'default' },
-      ],
-      { cancelable: false }
-    );
-    
-    // Note: Sound functionality removed for security. 
-    // Consider using react-native-sound-player or similar if needed.
   };
 
   const getStatusColor = () => {

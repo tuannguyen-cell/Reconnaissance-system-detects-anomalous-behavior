@@ -22,7 +22,8 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
@@ -39,7 +40,7 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-@router.websocket("/ws/detection")
+@router.websocket("/detection")
 async def websocket_detection(websocket: WebSocket):
     """
     WebSocket endpoint for real-time detection updates
@@ -85,7 +86,7 @@ async def websocket_detection(websocket: WebSocket):
         print(f"Client disconnected from detection stream")
 
 
-@router.websocket("/ws/statistics")
+@router.websocket("/statistics")
 async def websocket_statistics(websocket: WebSocket):
     """
     WebSocket endpoint for real-time statistics updates

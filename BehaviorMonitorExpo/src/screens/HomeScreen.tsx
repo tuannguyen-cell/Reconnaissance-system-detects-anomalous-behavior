@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,20 +6,40 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Alert,
+  Vibration,
 } from 'react-native';
 import { theme } from '../theme';
 import { api } from '../services/api';
 import { useNavigation } from '@react-navigation/native';
 import { ServerStatus } from '../types';
+import { Detection } from '../types';
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation();
   const [serverStatus, setServerStatus] = useState<ServerStatus | null>(null);
   const [recentAlerts, setRecentAlerts] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const lastAlertTime = useRef(0);
 
   useEffect(() => {
     loadData();
+
+    let unsubscribe: (() => void) | undefined;
+    void api.connectToDetectionStream((detection: Detection) => {
+      const now = Date.now();
+      if (now - lastAlertTime.current < 5000) return;
+      lastAlertTime.current = now;
+      Vibration.vibrate(500);
+      Alert.alert(
+        'Cảnh báo hành vi bất thường',
+        `Confidence: ${(detection.confidence * 100).toFixed(1)}%`,
+      );
+    }).then((cleanup) => {
+      unsubscribe = cleanup;
+    });
+
+    return () => unsubscribe?.();
   }, []);
 
   const loadData = async () => {

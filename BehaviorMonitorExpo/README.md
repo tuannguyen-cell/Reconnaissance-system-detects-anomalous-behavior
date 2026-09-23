@@ -38,4 +38,6 @@ npx expo export --platform android
 
 The monitoring screen requests camera permission, captures frames, and sends them
 to `/api/v1/detection/detect`. The JWT token is stored locally for subsequent
-history and statistics requests.
+history and statistics requests. After connecting, each app instance also listens
+to `/api/v1/ws/detection`; abnormal detections are broadcast by the backend to
+all connected app instances, which vibrate and show an alert.

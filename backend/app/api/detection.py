@@ -17,6 +17,7 @@ from app.models.schemas import (
 from app.services.detection_service import DetectionService
 from app.services.inference_service import inference_service
 from app.api.deps import get_current_active_user
+from app.api.websocket import broadcast_detection
 
 router = APIRouter()
 
@@ -53,7 +54,7 @@ async def detect_behavior(
         detection_service = DetectionService(db)
         detection = await detection_service.create_detection(detection_data)
         
-        return DetectionResponseAPI(
+        response = DetectionResponseAPI(
             label=result["label"],
             confidence=result["confidence"],
             timestamp=detection.timestamp.isoformat(),
@@ -61,6 +62,18 @@ async def detect_behavior(
             event_id=event_id,
             processing_time=result["processing_time"]
         )
+
+        if result["label"] == "abnormal":
+            await broadcast_detection({
+                "label": response.label,
+                "confidence": response.confidence,
+                "timestamp": response.timestamp,
+                "source": response.source,
+                "event_id": response.event_id,
+                "processing_time": response.processing_time,
+            })
+
+        return response
         
     except ValueError as e:
         raise HTTPException(

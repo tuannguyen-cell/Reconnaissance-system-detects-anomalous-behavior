@@ -84,6 +84,44 @@ const authenticate = async (serverUrl: string, credentials: Credentials) => {
 };
 
 export const api = {
+  async connectToDetectionStream(onAbnormal: (detection: Detection) => void): Promise<() => void> {
+    const serverUrl = await AsyncStorage.getItem(SERVER_URL_KEY);
+    if (!serverUrl) return () => undefined;
+
+    const websocketUrl = normalizeBaseUrl(serverUrl)
+      .replace(/^http:/, 'ws:')
+      .replace(/^https:/, 'wss:')
+      .replace(/\/api\/v1$/, '/api/v1/ws/detection');
+    let socket: WebSocket | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let closed = false;
+
+    const openSocket = () => {
+      socket = new WebSocket(websocketUrl);
+      socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === 'detection' && message.data?.label === 'abnormal') {
+            onAbnormal(toDetection(message.data));
+          }
+        } catch {
+          // Ignore malformed stream messages.
+        }
+      };
+      socket.onclose = () => {
+        if (!closed) reconnectTimer = setTimeout(openSocket, 3000);
+      };
+    };
+
+    openSocket();
+
+    return () => {
+      closed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      socket?.close();
+    };
+  },
+
   async connectToServer(serverUrl: string, credentials?: Credentials): Promise<ServerStatus> {
     const normalizedUrl = serverUrl.trim().replace(/\/+$/, '');
     const status = await request<any>('/health/status', {}, normalizedUrl);
